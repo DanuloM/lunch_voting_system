@@ -22,4 +22,5 @@ urlpatterns = [
     path("api/v1/auth/", include("apps.authentication.urls")),
     path("api/v1/restaurants/", include("apps.restaurants.urls")),
     path("api/v1/menus/", include("apps.menus.urls")),
+    path("api/v1/votes/", include("apps.voting.urls")),
 ]
