@@ -6,7 +6,7 @@ from django.contrib.auth import authenticate
 from django.db import IntegrityError
 
 from .models import User
-from .serializers import UserSerializer, UserRegistrationSerializer, LoginSerializer
+from .serializers import UserSerializer, UserRegistrationSerializer, LoginSerializer, EmployeeCreateSerializer
 
 
 class RegisterView(generics.CreateAPIView):
@@ -77,7 +77,25 @@ class MeView(generics.RetrieveAPIView):
     def get_object(self):
         return self.request.user
 
-    def get(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class EmployeeListCreateView(generics.ListCreateAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.role != "admin":
+            return User.objects.none()
+        return User.objects.filter(role="employee")
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return EmployeeCreateSerializer
+        return UserSerializer
+
+    def create(self, request, *args, **kwargs):
+        if request.user.role != "admin":
+            return Response(
+                {"detail": "Only admin can create employees"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return super().create(request, *args, **kwargs)
